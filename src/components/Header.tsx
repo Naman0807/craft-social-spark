@@ -1,11 +1,19 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAppContext } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { User, LogOut, Settings } from "lucide-react";
 
 const Header = () => {
-  const { remainingFreePosts, isSubscribed } = useAppContext();
+  const { remainingFreePosts, isSubscribed, user, signOut } = useAppContext();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="w-full py-4 px-4 md:px-8 border-b bg-white">
@@ -27,27 +35,55 @@ const Header = () => {
         </nav>
         
         <div className="flex items-center space-x-4">
-          {!isSubscribed && (
-            <div className="hidden md:block text-sm text-gray-600">
-              <span className="font-medium">Free Posts: </span>
-              <span className="font-bold">{remainingFreePosts}</span>
-            </div>
-          )}
-          
-          {!isSubscribed && (
-            <Link to="/pricing">
+          {user ? (
+            <>
+              {!isSubscribed && (
+                <div className="hidden md:block text-sm text-gray-600">
+                  <span className="font-medium">Free Posts: </span>
+                  <span className="font-bold">{remainingFreePosts}</span>
+                </div>
+              )}
+              
+              {!isSubscribed && (
+                <Link to="/pricing">
+                  <Button variant="default" className="bg-postcraft-primary hover:bg-postcraft-accent">
+                    Subscribe
+                  </Button>
+                </Link>
+              )}
+              
+              {isSubscribed && (
+                <div className="hidden md:flex items-center">
+                  <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
+                    Premium
+                  </span>
+                </div>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Link to="/auth">
               <Button variant="default" className="bg-postcraft-primary hover:bg-postcraft-accent">
-                Subscribe
+                Sign In
               </Button>
             </Link>
-          )}
-          
-          {isSubscribed && (
-            <div className="hidden md:flex items-center">
-              <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
-                Premium
-              </span>
-            </div>
           )}
         </div>
       </div>

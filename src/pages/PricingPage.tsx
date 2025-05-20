@@ -1,22 +1,45 @@
-
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card";
 import { useAppContext } from "@/contexts/AppContext";
 import { Check } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const PricingPage = () => {
-  const { isSubscribed, setIsSubscribed, remainingFreePosts } = useAppContext();
+  const { isSubscribed, setIsSubscribed, remainingFreePosts, user } = useAppContext();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleSubscribe = () => {
-    // In a real app, this would redirect to a payment processor
-    setIsSubscribed(true);
-    toast({
-      title: "Subscription Activated",
-      description: "Thank you for subscribing to PostCraft Premium!",
-    });
+  const handleSubscribe = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    try {
+      // In a real app, this would redirect to a payment processor
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_subscribed: true })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      setIsSubscribed(true);
+      toast({
+        title: "Subscription Activated",
+        description: "Thank you for subscribing to PostCraft Premium!",
+      });
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to activate subscription. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -123,7 +146,7 @@ const PricingPage = () => {
                 className="w-full bg-postcraft-primary hover:bg-postcraft-accent"
                 onClick={handleSubscribe}
               >
-                Subscribe Now
+                {user ? "Subscribe Now" : "Sign In to Subscribe"}
               </Button>
             )}
           </CardFooter>
